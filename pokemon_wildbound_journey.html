@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Pokémon: Wildbound Journey</title>
+<style>
+:root{--ink:#17233a;--cream:#fff8e8;--red:#e64d4d;--green:#4c9a69;--blue:#4b83bd;--gold:#f0bd4e}
+*{box-sizing:border-box}body{margin:0;background:#e9f1e7;color:var(--ink);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+header{background:#fff8e8;border-bottom:4px solid #26364d;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;position:sticky;top:0;z-index:3}
+h1{font-size:18px;margin:0}header small{display:block;color:#65718a;font-size:11px}
+.wrap{max-width:900px;margin:auto;padding:14px}.panel{background:var(--cream);border:3px solid #26364d;border-radius:16px;padding:14px;box-shadow:0 4px 0 #26364d;margin-bottom:12px}
+.stats{display:flex;gap:8px;flex-wrap:wrap}.pill{background:#e6edf8;border:2px solid #26364d;border-radius:99px;padding:6px 10px;font-size:12px;font-weight:700}
+h2{font-size:17px;margin:0 0 10px}.muted{color:#68758a;font-size:13px}.map{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.tile{min-height:66px;border:2px solid #31435a;border-radius:10px;background:#b7dca8;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:4px;font-size:11px;font-weight:700;cursor:pointer;position:relative}
+.tile:active{transform:translateY(1px)}.tile .emoji{font-size:23px;line-height:1.2}.tile.water{background:#a8d8ed}.tile.town{background:#f6d28c}.tile.forest{background:#a7cf9b}.tile.mountain{background:#c9c5c0}.tile.locked{filter:grayscale(.8);opacity:.55}.tile.current{outline:4px solid var(--red);outline-offset:1px}
+button{border:2px solid #26364d;border-radius:10px;background:#fff;padding:10px 13px;font-weight:800;color:var(--ink);cursor:pointer;font-size:14px;box-shadow:0 3px 0 #26364d}button:active{transform:translateY(2px);box-shadow:0 1px 0 #26364d}button.primary{background:#f5c65f}button:disabled{opacity:.45;cursor:not-allowed}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.log{background:#17233a;color:#eaf2ff;border-radius:10px;padding:12px;min-height:76px;font-size:13px;line-height:1.5}.starter{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.starter button{padding:12px 6px}.starter b{display:block;font-size:24px}.hidden{display:none!important}
+.bar{height:9px;background:#d7dce4;border-radius:99px;overflow:hidden;margin:5px 0}.bar span{display:block;height:100%;background:#5ca66f}
+.modal{position:fixed;inset:0;background:#15243dcc;display:flex;align-items:center;justify-content:center;padding:16px;z-index:5}.modal .panel{max-width:460px;width:100%;max-height:90vh;overflow:auto}
+.dpad{display:grid;grid-template-columns:repeat(3,48px);gap:5px;justify-content:center;margin-top:10px}.dpad button{padding:9px 0}.footer{text-align:center;color:#67748a;font-size:11px;padding:8px}
+@media(min-width:650px){.layout{display:grid;grid-template-columns:1.3fr .9fr;gap:12px}.map{gap:8px}.tile{min-height:82px}}
+</style></head>
+<body>
+<header><div><h1>🔴 Pokémon: Wildbound Journey</h1><small>A classic-style fan adventure • best on Safari</small></div><button id="reset">New game</button></header>
+<div class="wrap">
+<div class="stats panel"><span class="pill" id="trainer">Trainer: —</span><span class="pill" id="badge">Badges: 0</span><span class="pill" id="money">₽ 500</span><span class="pill" id="dex">Caught: 0</span></div>
+<div class="layout">
+<section>
+<div class="panel"><h2>🗺️ Wildbound Region</h2><p class="muted">Tap a neighboring location to travel. Explore routes, towns, caves and forests. New paths open as your journey continues.</p><div class="map" id="map"></div><div class="actions"><button id="explore" class="primary">Search this area</button><button id="heal">Visit Pokémon Center</button></div></div>
+<div class="panel"><h2>📍 Current location</h2><div id="place">Choose your first Pokémon to begin.</div><div class="actions"><button id="gym">Challenge Gym</button><button id="shop">Visit Poké Mart</button></div></div>
+</section>
+<section>
+<div class="panel"><h2>🎒 Your team</h2><div id="team" class="muted">No Pokémon yet.</div></div>
+<div class="panel"><h2>📜 Journey log</h2><div class="log" id="log">Welcome to Wildbound! Your adventure is waiting.</div></div>
+<div class="panel"><h2>🎮 How to play</h2><p class="muted">Travel between connected places, search routes for wild Pokémon, battle to gain experience, heal at Pokémon Centers, and earn badges from Gym Leaders. Your progress stays in this browser while this page is saved.</p></div>
+</section></div><div class="footer">Unofficial fan-made mini adventure. Pokémon and related names belong to their respective owners.</div>
+</div>
+<div class="modal" id="start"><div class="panel"><h2>Welcome, new Trainer!</h2><p>What should we call you?</p><input id="name" maxlength="16" placeholder="Trainer name" style="width:100%;padding:12px;border:2px solid #26364d;border-radius:9px;font-size:16px">
+<h2 style="margin-top:16px">Choose your first partner</h2><div class="starter">
+<button data-starter="Bulbasaur"><b>🌱</b>Bulbasaur<small>Grass</small></button>
+<button data-starter="Charmander"><b>🔥</b>Charmander<small>Fire</small></button>
+<button data-starter="Squirtle"><b>💧</b>Squirtle<small>Water</small></button>
+</div><p class="muted">A few newer-era discoveries may appear later, but this journey leans into the classic generations.</p></div></div>
+<div class="modal hidden" id="battle"><div class="panel"><h2 id="battleTitle">Wild Pokémon appeared!</h2><div id="battleInfo"></div><div class="actions"><button class="primary" id="attack">Attack</button><button id="ball">Throw Poké Ball</button><button id="run">Run away</button></div></div></div>
+<script>
+const places=[
+{id:'home',name:'Maple Town',e:'🏡',type:'town',x:0,y:2,desc:'A quiet hometown with a Pokémon Center and a friendly professor.',links:['meadow','coast']},
+{id:'meadow',name:'Route 1',e:'🌾',type:'forest',x:1,y:1,desc:'A sunny trail where small Pokémon rustle in the grass.',wild:['Pidgey','Rattata','Caterpie','Sentret'],links:['home','grove','lake']},
+{id:'coast',name:'Pebble Coast',e:'🏖️',type:'water',x:1,y:3,desc:'A breezy shoreline. Water Pokémon splash just offshore.',wild:['Psyduck','Tentacool','Magikarp'],links:['home','harbor']},
+{id:'grove',name:'Whispering Grove',e:'🌳',type:'forest',x:2,y:0,desc:'An old forest full of bug Pokémon and hidden paths.',wild:['Caterpie','Weedle','Oddish','Hoothoot'],links:['meadow','stone']},
+{id:'lake',name:'Bluebell Lake',e:'🌊',type:'water',x:2,y:2,desc:'A peaceful lake with rare water encounters.',wild:['Magikarp','Psyduck','Wooper'],links:['meadow','harbor','cave']},
+{id:'harbor',name:'Seabreeze Harbor',e:'⛵',type:'town',x:2,y:4,desc:'A port town with a Gym known for Water-type Pokémon.',links:['coast','lake','cliff']},
+{id:'stone',name:'Stonepath Pass',e:'⛰️',type:'mountain',x:3,y:0,desc:'A rocky pass. Watch for Geodude and Zubat.',wild:['Geodude','Zubat','Machop'],links:['grove','cave','summit']},
+{id:'cave',name:'Moonlit Cave',e:'🕯️',type:'mountain',x:3,y:2,desc:'A dark cave with unusual Pokémon. Bring a strong team.',wild:['Zubat','Geodude','Onix','Sableye'],links:['lake','stone','summit']},
+{id:'cliff',name:'Tideglass Cliff',e:'🌅',type:'mountain',x:3,y:4,desc:'A high coastal trail with a view across the region.',wild:['Wingull','Magnemite','Mareep'],links:['harbor','summit']},
+{id:'summit',name:'Crown Summit',e:'🏔️',type:'mountain',x:4,y:2,desc:'The final stretch. A powerful Gym Leader awaits.',wild:['Sneasel','Snover','Riolu'],links:['stone','cave','cliff']}
+];
+const species={Bulbasaur:['🌱','Grass',45],Charmander:['🔥','Fire',39],Squirtle:['💧','Water',44],Pidgey:['🐦','Flying',40],Rattata:['🐭','Normal',30],Caterpie:['🐛','Bug',45],Sentret:['🐾','Normal',35],Psyduck:['🦆','Water',50],Tentacool:['🪼','Water',40],Magikarp:['🐟','Water',20],Weedle:['🐝','Bug',40],Oddish:['🌿','Grass',45],Hoothoot:['🦉','Flying',60],Wooper:['🩵','Water',55],Geodude:['🪨','Rock',40],Zubat:['🦇','Flying',40],Machop:['💪','Fighting',70],Onix:['🐍','Rock',55],Sableye:['💎','Dark',50],Wingull:['🪽','Water',45],Magnemite:['🧲','Electric',40],Mareep:['🐑','Electric',55],Sneasel:['❄️','Dark',55],Snover:['🌲','Ice',60],Riolu:['🥊','Fighting',55],Pikachu:['⚡','Electric',45],Eevee:['🦊','Normal',55]};
+let state={name:'',loc:'home',team:[],caught:[],badges:0,money:500,unlocked:['home','meadow','coast'],wins:0};
+let wild=null,active=0;
+const $=id=>document.getElementById(id);
+function say(t){$('log').textContent=t}
+function save(){try{localStorage.setItem('wildbound-save',JSON.stringify(state))}catch(e){}}
+function render(){
+$('trainer').textContent='Trainer: '+(state.name||'—');$('badge').textContent='Badges: '+state.badges;$('money').textContent='₽ '+state.money;$('dex').textContent='Caught: '+state.caught.length;
+$('map').innerHTML=places.map(p=>{let unlocked=state.unlocked.includes(p.id),current=state.loc===p.id;return `<button class="tile ${p.type} ${unlocked?'':'locked'} ${current?'current':''}" data-place="${p.id}" ${unlocked?'':'disabled'}><span class="emoji">${p.e}</span>${p.name}${current?' • YOU':''}</button>`}).join('');
+$('map').querySelectorAll('[data-place]').forEach(b=>b.onclick=()=>travel(b.dataset.place));
+let p=places.find(x=>x.id===state.loc);$('place').innerHTML=`<b>${p.e} ${p.name}</b><p class="muted">${p.desc}</p>`;
+$('team').innerHTML=state.team.length?state.team.map((m,i)=>`<div style="margin:9px 0"><b>${m.icon} ${m.name}</b> <small>Lv.${m.lv} · ${m.type}</small><div class="bar"><span style="width:${Math.max(0,m.hp/m.max*100)}%"></span></div><small>HP ${m.hp}/${m.max} ${i===active?' · Active':''}</small> <button onclick="setActive(${i})" style="padding:4px 8px;font-size:11px">Use</button></div>`).join(''):'No Pokémon yet.';
+$('gym').disabled=state.badges>=3||!['home','harbor','summit'].includes(state.loc)||state.team.length===0;
+$('shop').disabled=!['home','harbor'].includes(state.loc);
+}
+function travel(id){let p=places.find(x=>x.id===id),here=places.find(x=>x.id===state.loc);if(!here.links.includes(id))return;state.loc=id;p.links.forEach(l=>{if(!state.unlocked.includes(l))state.unlocked.push(l)});say('You traveled to '+p.name+'. '+p.desc);render();save()}
+function setActive(i){active=i;render()}
+function heal(){state.team.forEach(m=>m.hp=m.max);say('The Pokémon Center restored your whole team!');render();save()}
+function newMon(name,lv=3){let s=species[name];let max=s[2]+lv*3;return {name,icon:s[0],type:s[1],lv,max,hp:max,xp:0}}
+function encounter(){let p=places.find(x=>x.id===state.loc);if(!p.wild){say('This is a safe town. Head out to a route, forest, coast or cave to find wild Pokémon.');return}let name=p.wild[Math.floor(Math.random()*p.wild.length)];wild=newMon(name,Math.max(2,Math.floor(Math.random()*4)+2));$('battleTitle').textContent='A wild '+wild.name+' appeared!';$('battleInfo').innerHTML=`<div style="font-size:52px;text-align:center">${wild.icon}</div><b>Wild ${wild.name} · Lv.${wild.lv}</b><div class="bar"><span id="wildbar" style="width:100%;background:#d75b5b"></span></div><p class="muted">Your active Pokémon: ${state.team[active].name}</p>`;$('battle').classList.remove('hidden')}
+function closeBattle(msg){$('battle').classList.add('hidden');say(msg);render();save()}
+function attack(){let m=state.team[active];if(m.hp<=0){say('That Pokémon needs healing!');return}let dmg=Math.max(5,Math.floor(m.lv*2+Math.random()*9));wild.hp-=dmg;if(wild.hp<=0){m.xp+=12;if(m.xp>=m.lv*10){m.lv++;m.xp=0;m.max+=7;m.hp=m.max;say(m.name+' grew to level '+m.lv+'!')}state.money+=35;state.wins++;closeBattle('You defeated '+wild.name+'! '+m.name+' gained experience and you found ₽35.');return}let hit=Math.max(3,Math.floor(wild.lv*2+Math.random()*6));m.hp=Math.max(0,m.hp-hit);$('battleInfo').innerHTML=`<div style="font-size:48px;text-align:center">${wild.icon}</div><b>Wild ${wild.name} · HP ${wild.hp}</b><div class="bar"><span style="width:${Math.max(0,wild.hp/wild.max*100)}%;background:#d75b5b"></span></div><p>${m.name} dealt ${dmg} damage. ${wild.name} hit back for ${hit}!</p><p class="muted">${m.name} HP: ${m.hp}/${m.max}</p>`}
+function catchWild(){let m=state.team[active];if(state.money<100){say('You need ₽100 for a Poké Ball. Visit the Poké Mart.');return}state.money-=100;if(wild.hp<=wild.max*.55||Math.random()<.35){if(state.team.length<6){state.team.push({...wild});state.caught.push(wild.name);closeBattle('Click! '+wild.name+' joined your team!');}else{state.caught.push(wild.name);closeBattle(wild.name+' was registered, but your team is full.');}}else{let hit=Math.max(2,wild.lv*2);m.hp=Math.max(0,m.hp-hit);$('battleInfo').innerHTML+=`<p>Oh no! It broke free and hit ${m.name} for ${hit} damage.</p>`}}
+function run(){closeBattle('You got away safely.')}
+function gym(){let p=state.loc;if(!['home','harbor','summit'].includes(p)||state.badges>=3)return;let leaders=[{loc:'home',name:'Mira',type:'Grass',mon:'Oddish',lv:5},{loc:'harbor',name:'Captain Finn',type:'Water',mon:'Psyduck',lv:9},{loc:'summit',name:'Astra',type:'Electric',mon:'Magnemite',lv:13}];let g=leaders.find(x=>x.loc===p);if(!g||state.badges!==leaders.indexOf(g)){say('This Gym is not ready for you yet. Earn the previous badge first.');return}let m=state.team[active];if(m.hp<=0){say('Heal your active Pokémon first.');return}let power=m.lv*3+Math.floor(Math.random()*18),need=g.lv*5;if(power>=need){state.badges++;state.money+=250;say('You defeated '+g.name+' and earned the '+['Meadow','Tide','Summit'][state.badges-1]+' Badge! Prize: ₽250.');}else{m.hp=Math.max(1,m.hp-12);say(g.name+' and '+g.mon+' were too strong this time. Train on nearby routes and try again.');}render();save()}
+function shop(){if(state.money<100){say('The Poké Mart sells Poké Balls for ₽100. You need a little more money.');return}state.money-=100;say('You bought a Poké Ball. It will be ready when you encounter a wild Pokémon.');render();save()}
+$('explore').onclick=encounter;$('heal').onclick=heal;$('gym').onclick=gym;$('shop').onclick=shop;$('attack').onclick=attack;$('ball').onclick=catchWild;$('run').onclick=run;
+$('reset').onclick=()=>{if(confirm('Start a brand-new journey? Your current local save will be replaced.')){localStorage.removeItem('wildbound-save');location.reload()}};
+document.querySelectorAll('[data-starter]').forEach(b=>b.onclick=()=>{let n=$('name').value.trim()||'Rookie';state.name=n;state.team=[newMon(b.dataset.starter,5)];state.caught=[b.dataset.starter];$('start').classList.add('hidden');say('Professor Rowan welcomes you, '+n+'! Your '+b.dataset.starter+' is ready. Head to Route 1 and begin exploring.');render();save()});
+try{let old=JSON.parse(localStorage.getItem('wildbound-save'));if(old&&old.team&&old.team.length){state=old;$('start').classList.add('hidden')}}catch(e){}
+render();
+</script></body></html>
